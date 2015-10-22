@@ -1,8 +1,10 @@
 from __future__ import with_statement
 
 import sqlite3
-import StringIO
-import types
+try:
+    import StringIO
+except ImportError:
+    import io as StringIO
 
 import dbkit
 from tests import utils, fakedb
@@ -187,7 +189,7 @@ def test_unpooled_disconnect():
                 assert ctx.mdr.conn is None
                 raise
         assert False, "Should've raised OperationalError"
-    except ctx.OperationalError, exc:
+    except ctx.OperationalError as exc:
         assert ctx.mdr.depth == 0
         assert ctx.mdr.conn is None
         assert str(exc) == "Simulating disconnect"
@@ -317,17 +319,17 @@ def test_make_placeholders():
     with utils.set_temporarily(fakedb, 'paramstyle', 'qmark'):
         with dbkit.connect(fakedb, 'db') as ctx:
             try:
-                print dbkit.make_placeholders({'foo': None})
+                print(dbkit.make_placeholders({'foo': None}))
                 assert False, "Should've got 'NotSupported' exception."
-            except dbkit.NotSupported, exc:
+            except dbkit.NotSupported as exc:
                 assert str(exc) == "Param style 'qmark' does not support sequence type 'dict'"
 
     with utils.set_temporarily(fakedb, 'paramstyle', 'named'):
         with dbkit.connect(fakedb, 'db') as ctx:
             try:
-                print dbkit.make_placeholders(['foo'])
+                print(dbkit.make_placeholders(['foo']))
                 assert False, "Should've got 'NotSupported' exception."
-            except dbkit.NotSupported, exc:
+            except dbkit.NotSupported as exc:
                 assert str(exc) == "Param style 'named' does not support sequence type 'list'"
 
 # vim:set et ai:

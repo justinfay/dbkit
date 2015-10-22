@@ -820,12 +820,12 @@ class FactoryBase(object):
         self.mdr = None
         self.cursor = None
         if exc != (None, None, None):
-            raise exc[0], exc[1], exc[2]
+            raise exc[0](exc[1], exc[2])
 
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         """
         Iterator method to return next row().
         """
@@ -834,6 +834,7 @@ class FactoryBase(object):
         except:
             self.close()
             raise
+    next = __next__
 
     def fetch(self):
         """
@@ -905,7 +906,7 @@ class AttrDict(dict):
     def __getattr__(self, key):
         try:
             return self[key]
-        except KeyError, exc:
+        except KeyError as exc:
             raise AttributeError(exc)
 
     def __setattr__(self, key, value):
@@ -914,7 +915,7 @@ class AttrDict(dict):
     def __delattr__(self, key):
         try:
             del self[key]
-        except KeyError, exc:
+        except KeyError as exc:
             raise AttributeError(exc)
 
     def __repr__(self):
@@ -958,10 +959,10 @@ def make_placeholders(seq, start=1):
     if isinstance(seq, dict):
         if param_style in ('named', 'pyformat'):
             template = ':%s' if param_style == 'named' else '%%(%s)s'
-            placeholders = (template % key for key in seq.iterkeys())
+            placeholders = (template % key for key in seq.keys())
     elif isinstance(seq, (list, tuple)):
         if param_style == 'numeric':
-            placeholders = (':%d' % i for i in xrange(start, start + len(seq)))
+            placeholders = (':%d' % i for i in range(start, start + len(seq)))
         elif param_style in ('qmark', 'format', 'pyformat'):
             placeholders = itertools.repeat(
                 '?' if param_style == 'qmark' else '%s',
@@ -989,9 +990,9 @@ def make_file_object_logger(fh):
         A logger that logs everything sent to a file object.
         """
         now = datetime.datetime.now()
-        print >> fh, "Executing (%s):" % now.isoformat()
-        print >> fh, textwrap.dedent(stmt)
-        print >> fh, "Arguments:"
+        fh.write("Executing (%s):\n" % now.isoformat())
+        fh.write("%s\n" % textwrap.dedent(stmt))
+        fh.write("Arguments:\n")
         pprint.pprint(args, fh)
     return logger_func
 
